@@ -83,10 +83,11 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        print(f"LoginView POST called with data: {request.data}, origin: {request.META.get('HTTP_ORIGIN')}")
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        
+
         # Log the login event
         EventLog.objects.create(
             user=user,
@@ -94,7 +95,7 @@ class LoginView(APIView):
             ip_address=self.get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
-        
+
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),

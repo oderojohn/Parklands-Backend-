@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x14hki9yd2b7^s1uu3h$j2j$5q$z4%3&-w^jnf9_61&wkdny$v'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-x14hki9yd2b7^s1uu3h$j2j$5q$z4%3&-w^jnf9_61&wkdny$v')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*').split(',')
 
 
 # Application definition
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'extensions'
 ]
 AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
@@ -82,8 +84,27 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'neondb',
+        'USER': 'neondb_owner',
+        'PASSWORD': 'npg_Qx0DLZm5SidF',
+        'HOST': 'ep-ancient-thunder-ahjwyyae-pooler.c-3.us-east-1.aws.neon.tech',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'channel_binding': 'require',
+        },
+    },
+    'backup': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME', 'parklands'),
+        'USER': os.getenv('DB_USER', 'psc'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Psc@2020?'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
@@ -130,14 +151,22 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://192.168.10.25:3000", 
-    "https://festival-america-telecom-vice.trycloudflare.com",
-]
+    "http://192.168.10.25:3004",
+    "http://192.168.10.23:3004",
+    "https://sec-holland-african-fitted.trycloudflare.com",
+    "capacitor://localhost",
+    "http://localhost",
+    "http://localhost:3004",
+    "http://192.168.3.5:3000",
+    "http://192.168.3.5:3002",
+    "https://pscict.netlify.app",
+] + [origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip() and (origin.strip().startswith('http://') or origin.strip().startswith('https://') or origin.strip().startswith('capacitor://'))]
+
 
 # Printer settings
-PRINTER_IP = "192.168.10.175"
-PRINTER_PORT = 9100
-PRINTER_ENABLED = True  # Set to False to disable printing for testing
+PRINTER_IP = os.getenv('PRINTER_IP', "192.168.")
+PRINTER_PORT = int(os.getenv('PRINTER_PORT', 9100))
+PRINTER_ENABLED = os.getenv('PRINTER_ENABLED', 'True').lower() == 'true'  # Set to False to disable printing for testing
 
 # Logging configuration
 LOGGING = {
@@ -167,9 +196,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 500
 }
-
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 # JWT Settings
 from datetime import timedelta
 
@@ -179,3 +211,19 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', "odero4170@gmail.com")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv('EMAIL_HOST', "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', "odero4170@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', "blty peex tdkn pvpi")
+# settings.py
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://sec-holland-african-fitted.trycloudflare.com",
+    "https://pscict.netlify.app",
+] + [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip() and (origin.strip().startswith('http://') or origin.strip().startswith('https://'))]
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_CREDENTIALS = True
